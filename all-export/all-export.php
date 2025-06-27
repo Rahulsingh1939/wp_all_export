@@ -4,8 +4,8 @@
  * Plugin URI:        https://example.com/
  * Description:       Export all WordPress core data like Users, Posts, Pages, Categories, and Taxonomies.
  * Version:           1.0.0
- * Author:            Gemini
- * Author URI:        https://gemini.google.com/
+ * Author:            Rahul Singh
+ * Author URI:        https://rahulsingh.free.nf/
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       all-export
