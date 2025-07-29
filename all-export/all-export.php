@@ -44,6 +44,7 @@ function aex_admin_page_html() {
                 <option value="export_pages">Pages (CSV)</option>
                 <option value="export_categories">Categories (CSV)</option>
                 <option value="export_taxonomies">All Taxonomies (CSV)</option>
+                <option value="export_media">All Media Files (ZIP)</option>
                 <option value="export_all_json">Export All (JSON)</option>
             </select>
             <?php submit_button('Export'); ?>
@@ -71,6 +72,9 @@ function aex_handle_export_actions() {
                 break;
             case 'export_taxonomies':
                 aex_export_taxonomies();
+                break;
+            case 'export_media':
+                aex_export_media();
                 break;
             case 'export_all_json':
                 aex_export_all_json();
@@ -222,6 +226,170 @@ function aex_export_taxonomies() {
 
     fclose($output);
     exit;
+}
+
+function aex_export_media() {
+    // Check if ZipArchive class is available
+    if (!class_exists('ZipArchive')) {
+        wp_die('ZipArchive class is not available. Please enable the ZIP extension in your PHP installation.');
+    }
+
+    $upload_dir = wp_upload_dir();
+    $uploads_path = $upload_dir['basedir'];
+    
+    // Check if uploads directory exists
+    if (!is_dir($uploads_path)) {
+        wp_die('Uploads directory not found.');
+    }
+
+    $filename = 'all-media-' . date('Y-m-d') . '.zip';
+    $temp_file = sys_get_temp_dir() . '/' . $filename;
+
+    $zip = new ZipArchive();
+    if ($zip->open($temp_file, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+        wp_die('Cannot create zip file.');
+    }
+
+    // Recursively add files to zip
+    aex_add_files_to_zip($zip, $uploads_path, $uploads_path);
+
+    $zip->close();
+
+    // Check if zip file was created successfully
+    if (!file_exists($temp_file)) {
+        wp_die('Failed to create zip file.');
+    }
+
+    // Set headers for download
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . filesize($temp_file));
+
+    // Output the file
+    readfile($temp_file);
+
+    // Clean up temporary file
+    unlink($temp_file);
+    exit;
+}
+
+// Helper function to recursively add files to zip
+function aex_add_files_to_zip($zip, $source_path, $base_path) {
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($source_path),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+
+    $all_files = array();
+    $image_groups = array();
+
+    // First pass: collect all files and group images
+    foreach ($iterator as $file) {
+        if (!$file->isDir()) {
+            $file_path = $file->getRealPath();
+            $relative_path = substr($file_path, strlen($base_path) + 1);
+            
+            // Skip hidden files and system files
+            if (strpos($relative_path, '.') === 0 || strpos($relative_path, '__MACOSX') !== false) {
+                continue;
+            }
+            
+            $file_info = pathinfo($relative_path);
+            $extension = strtolower($file_info['extension']);
+            $filename = $file_info['filename'];
+            
+            // Common image extensions
+            $image_extensions = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg');
+            
+            if (in_array($extension, $image_extensions)) {
+                // This is an image file, group it
+                $base_name = aex_get_image_base_name($filename);
+                $group_key = $file_info['dirname'] . '/' . $base_name . '.' . $extension;
+                
+                if (!isset($image_groups[$group_key])) {
+                    $image_groups[$group_key] = array();
+                }
+                
+                $image_groups[$group_key][] = array(
+                    'path' => $file_path,
+                    'relative_path' => $relative_path,
+                    'filename' => $filename,
+                    'is_original' => !preg_match('/-(\d+)x(\d+)$/', $filename),
+                    'is_768x512' => preg_match('/-768x512$/', $filename)
+                );
+            } else {
+                // Not an image, add directly
+                $all_files[] = array(
+                    'path' => $file_path,
+                    'relative_path' => $relative_path
+                );
+            }
+        }
+    }
+
+    // Second pass: select preferred version for each image group
+    foreach ($image_groups as $group) {
+        $preferred_file = aex_select_preferred_image($group);
+        if ($preferred_file) {
+            $all_files[] = $preferred_file;
+        }
+    }
+
+    // Add all selected files to zip
+    foreach ($all_files as $file) {
+        $zip->addFile($file['path'], $file['relative_path']);
+    }
+}
+
+// Helper function to get the base name of an image (without size suffix)
+function aex_get_image_base_name($filename) {
+    // Remove size suffix like -768x512, -300x200, etc.
+    return preg_replace('/-\d+x\d+$/', '', $filename);
+}
+
+// Helper function to select the preferred image from a group
+function aex_select_preferred_image($image_group) {
+    $preferred = null;
+    
+    foreach ($image_group as $image) {
+        if ($image['is_768x512']) {
+            // Found 768x512 version, this is our top preference
+            return $image;
+        } elseif ($image['is_original'] && $preferred === null) {
+            // Original version, keep as fallback
+            $preferred = $image;
+        }
+    }
+    
+    // Return the original if no 768x512 was found, or the first file if no original
+    return $preferred ?: $image_group[0];
+}
+
+// Helper function to determine if a file should be included in the export
+function aex_should_include_file($file_path) {
+    $file_info = pathinfo($file_path);
+    $extension = strtolower($file_info['extension']);
+    $filename = $file_info['filename'];
+    
+    // Common image extensions
+    $image_extensions = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg');
+    
+    // If it's not an image file, include it (PDFs, documents, etc.)
+    if (!in_array($extension, $image_extensions)) {
+        return true;
+    }
+    
+    // For image files, check if it's an original or 768x512 version
+    // WordPress image pattern: filename-{width}x{height}.extension
+    if (preg_match('/-(\d+)x(\d+)$/', $filename, $matches)) {
+        // This is a resized image, check if it's 768x512
+        $width = $matches[1];
+        $height = $matches[2];
+        return ($width == '768' && $height == '512');
+    } else {
+        // No size suffix found, this is likely the original image
+        return true;
+    }
 }
 
 function aex_export_all_json() {
