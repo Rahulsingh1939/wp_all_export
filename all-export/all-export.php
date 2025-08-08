@@ -640,16 +640,16 @@ function aex_select_preferred_image($image_group) {
     $preferred = null;
     
     foreach ($image_group as $image) {
-        if ($image['is_768x512']) {
-            // Found 768x512 version, this is our top preference
+        if ($image['is_original']) {
+            // Found original version, this is our top preference
             return $image;
-        } elseif ($image['is_original'] && $preferred === null) {
-            // Original version, keep as fallback
+        } elseif ($image['is_768x512'] && $preferred === null) {
+            // 768x512 version, keep as fallback
             $preferred = $image;
         }
     }
     
-    // Return the original if no 768x512 was found, or the first file if no original
+    // Return the 768x512 if no original was found, or the first file if neither
     return $preferred ?: $image_group[0];
 }
 
@@ -667,15 +667,14 @@ function aex_should_include_file($file_path) {
         return true;
     }
     
-    // For image files, check if it's an original or 768x512 version
+    // For image files, prefer original images without size suffix
     // WordPress image pattern: filename-{width}x{height}.extension
     if (preg_match('/-(\d+)x(\d+)$/', $filename, $matches)) {
-        // This is a resized image, check if it's 768x512
-        $width = $matches[1];
-        $height = $matches[2];
-        return ($width == '768' && $height == '512');
+        // This is a resized image, only include if no original exists
+        // This function is used in the older method, prefer original images
+        return false;
     } else {
-        // No size suffix found, this is likely the original image
+        // No size suffix found, this is the original image
         return true;
     }
 }
