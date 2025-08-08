@@ -12,7 +12,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Get tag version (e.g., v0.0.2)
+      # STEP 1: Extract version from tag (e.g. v0.0.2)
+      - name: Extract version from tag
         id: tag
         run: |
           TAG=${GITHUB_REF##*/}
@@ -20,13 +21,29 @@ jobs:
           echo "VERSION=$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
+      # STEP 2: Debug - List files/folders
+      - name: List root directory contents
+        run: ls -la
+
+      # STEP 3: Zip the folder (change `all-export` if needed)
       - name: Zip the folder
         run: |
           VERSION=${{ steps.tag.outputs.VERSION }}
-          ZIP_NAME="wp-all-export_${VERSION}.zip"
-          zip -r "$ZIP_NAME" all-export
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          ZIP_NAME="all-export_${VERSION}.zip"
+          
+          if [ -d "all-export" ]; then
+            zip -r "$ZIP_NAME" all-export
+            echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          else
+            echo "❌ Folder 'all-export' not found!"
+            exit 1
+          fi
 
+      # STEP 4: Debug - Show created ZIP
+      - name: Show created ZIP file
+        run: ls -la *.zip || echo "❌ ZIP not created"
+
+      # STEP 5: Upload ZIP to GitHub release
       - name: Upload ZIP to release
         uses: softprops/action-gh-release@v1
         with:
