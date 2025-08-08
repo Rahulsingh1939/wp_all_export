@@ -16,7 +16,9 @@ jobs:
         id: tag
         run: |
           TAG=${GITHUB_REF##*/}
-          echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
+          VERSION="${TAG#v}"
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Zip the folder
         run: |
@@ -29,3 +31,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.ZIP_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
