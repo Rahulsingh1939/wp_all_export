@@ -15,7 +15,7 @@
 - [Installation & Setup](#-installation--setup)
 - [Migration Workflow](#-migration-workflow)
 - [Component Plugin Architecture](#-component-plugin-architecture)
-- [Troubleshooting](#-troubleshooting)
+- [Troubleshooting](#%EF%B8%8F-troubleshooting)
 - [FAQs](#-faqs)
 
 
@@ -30,11 +30,12 @@ The **Advanced Migration Tool** is a powerful Joomla extension that enables seam
 - **Complete Content Migration**: Articles, Categories, Tags, Users, Menus Custom Fields, and Media
 - **Smart Media Transfer**: FTP/FTPS/SFTP/ZIP with automatic URL rewriting
 - **Safe Operations**: Duplicate detection, real-time progress tracking, and comprehensive logging
+- **Batch Processing**: Optimized for migrating large sites.
 - **User-Friendly Interface**: Intuitive workflow with clear progress indicators
 
 ### 🔄 Two Migration Methods
 
-![Native Export](../assets/export_method.png) 
+![Native Export](../assets/Choose_CMS.png) 
 
 | **Method 1: Native Export Files** | **Method 2: JSON Export** |
 |-----------------------------------|---------------------------|
@@ -149,11 +150,6 @@ Instead, install our export plugin on your **source CMS**:
 
 ## 🔄 Migration Workflow
 
-### Overview of the Migration Process
-
-![Migration Workflow](assets/migration-workflow.gif)
-*Complete migration workflow from start to finish*
-
 ### 1. Choose Source CMS
 
 #### Method 1: Native Export Files
@@ -161,7 +157,7 @@ Instead, install our export plugin on your **source CMS**:
 2. **Select** your source CMS from the dropdown (e.g., "WordPress")
 3. **Ensure** the corresponding plugin is installed and enabled
 
-![Choose Source CMS](assets/choose-source-cms.png)
+![Choose Source CMS](../assets/Choose_CMS.png) 
 *Source CMS selection interface*
 
 #### Method 2: JSON Export
@@ -321,8 +317,6 @@ Source CMS Plugins:
 | **Invalid file format** | "Unsupported file" error | Verify export file format and plugin installation |
 | **Corrupted export file** | Parse errors during import | Re-export from source CMS, check file integrity |
 
-![Upload Troubleshooting](assets/upload-troubleshooting.png)
-*File upload troubleshooting guide*
 
 #### Connection and Permission Issues
 
@@ -341,9 +335,6 @@ Source CMS Plugins:
 | **Partial content import** | Some articles missing | Verify source file completeness, re-run migration |
 | **Broken media links** | Images don't display | Check source URL configuration, media migration settings |
 | **Duplicate content errors** | "Already exists" warnings | Normal behavior - existing content is skipped |
-
-![Process Troubleshooting](assets/process-troubleshooting.png)
-*Migration process troubleshooting flowchart*
 
 #### Plugin-Specific Issues
 
@@ -371,40 +362,40 @@ Solution:
 
 ### General Questions
 
-**Q: Can I run multiple migrations on the same Joomla site?**
+**Q: Can I run multiple migrations on the same Joomla site?**\
 A: Yes, the tool safely handles multiple migrations. Duplicate content (same titles) is automatically skipped.
 
-**Q: What happens to existing Joomla content?**
+**Q: What happens to existing Joomla content?**\
 A: Existing content is preserved. The migration tool only adds new content and skips duplicates.
 
-**Q: How long does a typical migration take?**
+**Q: How long does a typical migration take?**\
 A: Depends on content size:
 - Small sites (< 100 articles): 1-5 minutes
 - Medium sites (100-1000 articles): 5-30 minutes  
 - Large sites (1000+ articles): 30-180 minutes
 
-**Q: Can I migrate from multiple source sites?**
+**Q: Can I migrate from multiple source sites?**\
 A: Yes, you can run separate migrations for each source site. Content is merged safely.
 
 ### Technical Questions
 
-**Q: Which migration method should I choose?**
-A: 
+**Q: Which migration method should I choose?**\
+A:
 - **Method 1 (Native)**: Best for standard WordPress exports, no source CMS changes required
 - **Method 2 (JSON)**: Best for custom requirements, enhanced control, consistent format
 
-**Q: Are user passwords migrated?**
+**Q: Are user passwords migrated?**\
 A: No, for security reasons. All migrated users receive random passwords and must reset them.
 
-**Q: How are custom fields handled?**
+**Q: How are custom fields handled?**\
 A: Custom fields are automatically mapped to Joomla custom fields. Underscore-prefixed fields are treated as metadata.
 
-**Q: Can I customize the migration process?**
+**Q: Can I customize the migration process?**\
 A: Yes, through plugin configuration and custom export plugins. See Developer Documentation for details.
 
 ### Content-Specific Questions
 
-**Q: What content types are supported?**
+**Q: What content types are supported?**\
 A: Standard support includes:
 - ✅ Articles/Posts/Pages
 - ✅ Categories (with hierarchy)
@@ -414,18 +405,18 @@ A: Standard support includes:
 - ✅ Custom Fields
 - ✅ Media files
 
-**Q: How are WordPress shortcodes handled?**
+**Q: How are WordPress shortcodes handled?**\
 A: Basic shortcodes are converted to Joomla equivalents. Complex shortcodes may require manual review.
 
 ### Media Migration Questions
 
-**Q: Where are migrated media files stored?**
+**Q: Where are migrated media files stored?**\
 A: Default location is `images/imports/` but you can specify a custom directory.
 
-**Q: What if media files are very large?**
+**Q: What if media files are very large?**\
 A: Use the ZIP upload method for large media libraries, or configure FTP with increased timeouts.
 
-**Q: Are media file names preserved?**
+**Q: Are media file names preserved?**\
 A: Yes, including directory structure. File conflicts are handled with numerical suffixes.
 
 ---
